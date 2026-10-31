@@ -87,3 +87,14 @@ window.UI = {
   ur:{hello:'السلام علیکم',learn:'سیکھیں',trace:'لکھیں',badges:'انعام',parents:'والدین'},
   ar:{hello:'السلام عليكم',learn:'تَعَلَّم',trace:'اُكْتُب',badges:'أَوْسِمَة',parents:'الوالدان'}
 };
+/* Translator languages: code (MyMemory), name, flag, dir */
+window.TLANGS=[['en','English','🇬🇧'],['ur','Urdu','🇵🇰','rtl'],['ar','Arabic','🇸🇦','rtl'],['es','Spanish','🇪🇸'],['fr','French','🇫🇷'],['de','German','🇩🇪'],['it','Italian','🇮🇹'],['pt','Portuguese','🇵🇹'],['ru','Russian','🇷🇺'],['zh-CN','Chinese','🇨🇳'],['ja','Japanese','🇯🇵'],['ko','Korean','🇰🇷'],['hi','Hindi','🇮🇳'],['bn','Bengali','🇧🇩'],['tr','Turkish','🇹🇷'],['id','Indonesian','🇮🇩'],['ms','Malay','🇲🇾'],['fa','Persian','🇮🇷','rtl'],['pa','Punjabi','🇵🇰'],['sw','Swahili','🇰🇪'],['nl','Dutch','🇳🇱'],['pl','Polish','🇵🇱'],['uk','Ukrainian','🇺🇦'],['el','Greek','🇬🇷'],['he','Hebrew','🇮🇱','rtl'],['ta','Tamil','🇮🇳'],['te','Telugu','🇮🇳'],['vi','Vietnamese','🇻🇳'],['th','Thai','🇹🇭'],['fil','Filipino','🇵🇭']];
+/* Kid-safety block list (matched on whole words for Latin script, as substrings for Arabic script). Extend as needed. */
+window.BLOCKED={
+ latin:['fuck','fucking','fucker','motherfucker','shit','bullshit','bitch','bastard','asshole','arsehole','dick','dickhead','cock','pussy','cunt','slut','whore','hoe','porn','porno','sex','sexy','nude','naked','boobs','penis','vagina','nigger','nigga','faggot','fag','retard','wanker','twat','damn','crap','piss','bollocks','kill yourself','kys',
+  'chutiya','chutia','bhenchod','behenchod','benchod','madarchod','maderchod','harami','haramzada','haramzadi','kamina','kameena','kamini','kameeni','gandu','gaandu','randi','lund','phudi','kanjar','kanjri','khotey','ullu ka patha','bakwas karo','teri maa','teri behen',
+  'sharmouta','sharmuta','ibn el kalb','kos omak','kus ummak','ayre','zebi','manyak','gahba',
+  'puta','mierda','joder','cabron','merde','putain','salope','scheisse','arschloch','orospu','siktir','amk','cazzo','vaffanculo','blyat','suka'],
+ script:['حرامی','حرامزادہ','حرام زادہ','کمینہ','کمینی','چوتیا','بہن چود','بہنچود','ماں چود','مادرچود','گانڈو','رنڈی','پھدی','کنجر','کنجری','بےغیرت',
+  'شرموطة','شرموط','عاهرة','منيوك','كس امك','كس أمك','ابن الكلب','ابن الحرام','قحبة','زبي','يلعن','خول','لعنة الله عليك']
+};

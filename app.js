@@ -5,7 +5,7 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const AVATARS=['🦁','🐼','🐰','🦊','🐯','🐨','🐸','🦄','🐧','🐢'];
 let S=load();
-function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.profiles)return s}catch(e){}return{profiles:[],current:null,settings:{voiceOnly:true,voice:true,sfx:false,rate:0.8,limit:0}}}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.profiles)return s}catch(e){}return{profiles:[],current:null,settings:{online:true,voiceOnly:true,voice:true,sfx:false,rate:0.8,limit:0}}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Could not save progress on this device.')}}
 const kid=()=>S.profiles.find(p=>p.id===S.current);
 function toast(msg,ms){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,ms||3500)}
@@ -22,12 +22,14 @@ function say(text,lang,key){
   if(!S.settings.voice)return;
   if(key&&window.RECORDED.includes(lang+'/'+key)){const a=new Audio('audio/'+lang+'/'+key+'.mp3');a.play().catch(()=>{});return}
   if(!('speechSynthesis' in window)){fallback(lang);return}
-  speechSynthesis.cancel();const v=findVoice(LANGS[lang].voice);
+  speechSynthesis.cancel();const v=findVoice(vcode(lang));
   if(!v){fallback(lang);return}
   const u=new SpeechSynthesisUtterance(text);u.lang=v.lang;u.voice=v;u.rate=S.settings.rate||0.8;speechSynthesis.speak(u);
 }
+const vcode=l=>((LANGS[l]&&LANGS[l].voice)||l).toLowerCase().split('-')[0];
+const lname=l=>(LANGS[l]&&LANGS[l].name)||((window.TLANGS||[]).find(x=>x[0]===l)||[0,l])[1];
 function fallback(lang){if(warned[lang]&&Date.now()-warned[lang]<20000)return;warned[lang]=Date.now();
-  toast('🦉 This device has no '+LANGS[lang].name+' voice yet. Read the word together with a grown-up! 💛',5000)}
+  toast('🦉 This device has no '+lname(lang)+' voice yet. Read the word together with a grown-up! 💛',5000)}
 let actx;function sfx(ok){if(!S.settings.sfx||S.settings.voiceOnly)return;try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=ok?880:220;g.gain.value=.08;o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+.15)}catch(e){}}
 function confetti(){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;const c=document.createElement('div');c.className='confetti';c.setAttribute('aria-hidden','true');c.innerHTML=Array.from({length:24},()=>`<i style="left:${Math.random()*100}%;animation-delay:${Math.random()*.6}s">${['⭐','🌟','✨','💜','🎈'][Math.floor(Math.random()*5)]}</i>`).join('');document.body.appendChild(c);setTimeout(()=>c.remove(),2400)}
 
@@ -36,7 +38,7 @@ const word=(it,l)=>it[l]||it.en;
 const wordHTML=(it,l,cls)=>`<div class="${cls||'word'}" lang="${l}" dir="${LANGS[l].dir}">${esc(word(it,l))}</div>`;
 function lessonsOf(pack){const L=[];for(let i=0;i<pack.items.length;i+=4)L.push(pack.items.slice(i,i+4));L.push(null);return L} // null = review
 function starsFor(p,pk,i){return ((p.stars||{})[pk]||{})[i]||0}
-function totalStars(p){let t=0;for(const k in p.stars||{})for(const i in p.stars[k])t+=p.stars[k][i];return t}
+function totalStars(p){let t=Object.keys(p.words||{}).length;for(const k in p.stars||{})for(const i in p.stars[k])t+=p.stars[k][i];return t}
 function lessonsDone(p){let t=0;for(const k in p.stars||{})t+=Object.keys(p.stars[k]).length;return t}
 const BADGES=[
  {id:'first',ic:'🌱',t:'First lesson',test:p=>lessonsDone(p)>=1},
@@ -67,7 +69,7 @@ function go(screen,arg){cur=screen;if('speechSynthesis' in window)speechSynthesi
  $('#topbar').hidden=!chrome;$('#tabs').hidden=!chrome;if(chrome){bar();tabs(screen)}
  (SCREENS[screen]||SCREENS.home)(arg);app.focus({preventScroll:true});window.scrollTo(0,0)}
 function bar(){const p=kid();$('#topbar').innerHTML=`<button class="who" id="switchKid" aria-label="Switch child"><span class="av">${p.avatar}</span><span>${esc(p.name)}</span></button><span class="pill fire" title="Day streak">🔥 ${liveStreak(p)}</span><span class="pill" title="Stars">⭐ ${totalStars(p)}</span>`;$('#switchKid').onclick=()=>go('profiles')}
-function tabs(active){const T=[['home','🗺️','Learn'],['trace','✏️','Trace'],['badges','🏅','Badges'],['gate','👪','Parents']];
+function tabs(active){const T=[['translate','🌍','Translate'],['home','🗺️','Learn'],['trace','✏️','Trace'],['badges','🏅','Badges'],['gate','👪','Parents']];
  $('#tabs').innerHTML=T.map(([id,ic,l])=>`<button data-go="${id}" ${active===id||(id==='home'&&active==='pack')?'aria-current="page"':''}><span aria-hidden="true">${ic}</span>${l}</button>`).join('');
  $('#tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>go(b.dataset.go))}
 
@@ -76,7 +78,7 @@ profiles(){app.innerHTML=`<div class="center">${MASCOT('bounce')}<h1>Multilingo<
  <div class="grid">${S.profiles.map((p,i)=>`<button class="tile c${i%7}" data-id="${p.id}"><span class="ic">${p.avatar}</span>${esc(p.name)}<small>${LANGS[p.lang].flag} ${LANGS[p.lang].name}</small></button>`).join('')}
  <button class="tile" id="add"><span class="ic">➕</span>Add child</button></div>
  <button class="big soft" id="par">👪 Parents</button>`;
- app.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{S.current=b.dataset.id;save();go('home')});
+ app.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{S.current=b.dataset.id;save();go('translate')});
  $('#add').onclick=()=>go('gate','newkid');$('#par').onclick=()=>go('gate','parent');
  const s=app.querySelector('svg');s.style.width='130px'},
 newkid(){let av=AVATARS[0],lang='en';app.innerHTML=`<button class="back" id="bk">← Back</button><h1>New learner</h1>
@@ -88,7 +90,7 @@ newkid(){let av=AVATARS[0],lang='en';app.innerHTML=`<button class="back" id="bk"
  app.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{av=b.dataset.a;app.querySelectorAll('[data-a]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
  app.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{lang=b.dataset.l;app.querySelectorAll('[data-l]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
  $('#ok').onclick=()=>{const n=$('#nm').value.trim();if(!n){toast('Please type a name 😊');$('#nm').focus();return}
-  const p={id:'k'+Date.now(),name:n,avatar:av,lang,stars:{},badges:[],traced:{},streak:0,best:0};S.profiles.push(p);S.current=p.id;save();go('home')}},
+  const p={id:'k'+Date.now(),name:n,avatar:av,lang,stars:{},badges:[],traced:{},streak:0,best:0};S.profiles.push(p);S.current=p.id;save();go('translate')}},
 home(){const p=kid(),ui=UI[p.lang]||UI.en;app.innerHTML=`<div class="hero">${MASCOT('bounce')}<p><span lang="${p.lang}" dir="${LANGS[p.lang].dir}">${esc(ui.hello)}</span>, ${esc(p.name)}!<br>Let's learn ${LANGS[p.lang].name} today!</p></div>
  <div class="grid">${PACKS.map((pk,i)=>{const L=lessonsOf(pk),d=L.filter((_,j)=>starsFor(p,pk.id,j)>0).length;return `<button class="tile c${i%7}" data-p="${pk.id}"><span class="ic" aria-hidden="true">${pk.icon}</span>${pk.title}<small>${d}/${L.length} lessons</small></button>`}).join('')}</div>`;
  app.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>go('pack',b.dataset.p))},
@@ -103,7 +105,7 @@ badges(){const p=kid();app.innerHTML=`<h1>🏅 ${esc(p.name)}'s badges</h1><div 
 gate(next){const a=3+Math.floor(Math.random()*7),b=3+Math.floor(Math.random()*7);let ans='';
  app.innerHTML=`<button class="back" id="bk">← Back</button><h1 class="center">👪 Grown-ups only</h1><p class="center">What is <b>${a} × ${b}</b>?</p><div class="answer" id="ans" aria-live="polite">&nbsp;</div>
  <div class="pad">${[1,2,3,4,5,6,7,8,9,'⌫',0,'✓'].map(k=>`<button data-k="${k}" aria-label="${k==='⌫'?'Delete':k==='✓'?'Check':k}">${k}</button>`).join('')}</div>`;
- $('#bk').onclick=()=>go(kid()?'home':'profiles');
+ $('#bk').onclick=()=>go(kid()?'translate':'profiles');$
  app.querySelectorAll('[data-k]').forEach(btn=>btn.onclick=()=>{const k=btn.dataset.k;if(k==='⌫')ans=ans.slice(0,-1);else if(k==='✓'){if(+ans===a*b){go(next||'parent');return}else{toast('Not quite. Ask a grown-up!');ans=''}}else if(ans.length<3)ans+=k;$('#ans').textContent=ans||'\u00a0'})},
 parent(){const st=S.settings;
  app.innerHTML=`<button class="back" id="bk">← Back</button><h1>👪 Parent area</h1>
@@ -115,19 +117,20 @@ parent(){const st=S.settings;
  <label class="row">Gentle tap sounds<input type="checkbox" class="switch" id="fx" ${st.sfx?'checked':''} ${st.voiceOnly?'disabled':''}></label>
  <label class="row">Speaking speed<select id="rt">${[[.6,'Slow'],[.8,'Normal'],[1,'Fast']].map(([v,l])=>`<option value="${v}" ${st.rate==v?'selected':''}>${l}</option>`).join('')}</select></label>
  <button class="big soft" id="test">🔊 Test voices</button><p class="muted" id="vinfo"></p></div>
+ <div class="card"><h2>Translator</h2><label class="row">Online translation (off = built-in kid dictionary only)<input type="checkbox" class="switch" id="onl" ${st.online!==false?'checked':''}></label><p class="muted">Rude words are always blocked in both directions. Typed text is sent to MyMemory (or Lingva as backup) only when online translation is on.</p></div>
  <div class="card"><h2>Screen time</h2><label class="row">Daily limit per child<select id="lim">${[0,10,15,20,30,45,60].map(v=>`<option value="${v}" ${st.limit==v?'selected':''}>${v?v+' minutes':'No limit'}</option>`).join('')}</select></label></div>
  <div class="card"><h2>Children</h2>${S.profiles.map(p=>`<div class="row"><span>${p.avatar} ${esc(p.name)}</span><span><select data-lang="${p.id}" aria-label="Language for ${esc(p.name)}">${Object.keys(LANGS).map(l=>`<option value="${l}" ${p.lang===l?'selected':''}>${LANGS[l].name}</option>`).join('')}</select> <button class="back" data-del="${p.id}" aria-label="Remove ${esc(p.name)}">🗑️</button></span></div>`).join('')}</div>
  <div class="card"><h2>About</h2><p>No ads. No tracking. No accounts. Progress stays on this device only. Works offline after the first visit.</p><p class="muted">Duas follow common Sunnah wording; please review them with your child. Recorded native audio can be added in <code>audio/</code>.</p></div>`;
- $('#bk').onclick=()=>go(kid()?'home':'profiles');$('#addk').onclick=()=>go('newkid');
+ $('#bk').onclick=()=>go(kid()?'translate':'profiles');$('#addk').onclick=()=>go('newkid');
  const set=(k,v)=>{st[k]=v;save()};
  $('#vo').onchange=e=>{set('voiceOnly',e.target.checked);$('#fx').disabled=e.target.checked};$('#vc').onchange=e=>set('voice',e.target.checked);$('#fx').onchange=e=>set('sfx',e.target.checked);
- $('#rt').onchange=e=>set('rate',+e.target.value);$('#lim').onchange=e=>set('limit',+e.target.value);
+ $('#onl').onchange=e=>set('online',e.target.checked);$('#rt').onchange=e=>set('rate',+e.target.value);$('#lim').onchange=e=>set('limit',+e.target.value);
  $('#test').onclick=()=>{loadVoices();$('#vinfo').textContent=Object.keys(LANGS).map(l=>LANGS[l].name+': '+(findVoice(LANGS[l].voice)?'✅':'❌ not installed')).join(' · ');say('Hello','en')};
  app.querySelectorAll('[data-lang]').forEach(s=>s.onchange=()=>{S.profiles.find(p=>p.id===s.dataset.lang).lang=s.value;save()});
  app.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{if(confirm('Remove this child and their progress?')){S.profiles=S.profiles.filter(p=>p.id!==b.dataset.del);if(S.current===b.dataset.del)S.current=null;save();go('parent')}})},
 break(){app.innerHTML=`<div class="center">${MASCOT('bounce')}<h1>Time for a break! 🌳</h1><p>Great learning today. Let's play outside, read a book, or help at home. See you tomorrow!</p><button class="big soft" id="pg">👪 Grown-up: extend time</button><button class="big soft" id="sw">Switch child</button></div>`;
  app.querySelector('svg').style.width='150px';$('#pg').onclick=()=>go('gate','unlock');$('#sw').onclick=()=>go('profiles')},
-unlock(){const p=kid();if(p){p.unlock=today();save()}toast('Extra time unlocked for today.');go('home')}
+unlock(){const p=kid();if(p){p.unlock=today();save()}toast('Extra time unlocked for today.');go('translate')}
 };
 
 /* ---------- Lesson ---------- */
@@ -190,5 +193,5 @@ function traceScreen(letter){const p=kid();traceLang=traceLang||(LETTERS[p.lang]
 
 /* ---------- Boot ---------- */
 if('serviceWorker' in navigator&&location.protocol!=='file:')window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
-window.__go=go;go(kid()?'home':'profiles');
+window.ML={S,save,kid,esc,say,toast,go,bumpStreak,checkBadges,confetti,SCREENS,bar:()=>bar()};
 })();
