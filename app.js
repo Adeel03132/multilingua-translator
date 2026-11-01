@@ -55,7 +55,7 @@ async function say(text,lang,key){
   if(mode==='auto'&&canOnline){try{await sayOnline(text,lang,id);return}catch(e){}}
   fallback(lang)}
 function precacheLang(lang){try{if(!('caches' in window)||!navigator.onLine||(navigator.connection&&navigator.connection.saveData))return;
-  const flag='multilingua.audio2.'+lang;if(localStorage.getItem(flag))return;
+  const flag='multilingua.audio3.'+lang;if(localStorage.getItem(flag))return;
   const urls=window.RECORDED.filter(k=>k.startsWith(lang+'/')).map(k=>'audio/'+k+'.mp3');
   (window.requestIdleCallback||setTimeout)(()=>caches.open(AUDIO_CACHE).then(c=>c.addAll(urls)).then(()=>localStorage.setItem(flag,'1')).catch(()=>{}),3000)}catch(e){}}
 const vcode=l=>((LANGS[l]&&LANGS[l].voice)||l).toLowerCase().split('-')[0];

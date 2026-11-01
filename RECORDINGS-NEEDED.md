@@ -9,6 +9,8 @@ How to add one:
 4. Add the key (e.g. `"ar/duas-sleep"`) to `window.RECORDED` in `data.js`, then bump the `V` and `A` cache names in `sw.js` (e.g. `multilingua-v7` and `multilingua-audio-3`).
 5. Add the qari's name and written permission to `audio/LICENSES.md`.
 
+Status (1 Nov 2026): DONE: wake, home, jazak (OpenDua, Muhammad Jumah). STILL NEEDED: sleep (OpenDua only has the بِاسْمِكَ اللَّهُمَّ order), salam (OpenDua only has the graveyard greeting with no pause after عَلَيْكُمْ).
+
 | File | When | Arabic text to record | Source |
 |---|---|---|---|
 | `audio/ar/duas-sleep.mp3` | Before sleeping | اللَّهُمَّ بِاسْمِكَ أَمُوتُ وَأَحْيَا | Sahih al-Bukhari 6314 (https://sunnah.com/bukhari:6314) |
