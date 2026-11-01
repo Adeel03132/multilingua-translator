@@ -11,10 +11,12 @@ How to add one:
 
 | File | When | Arabic text to record | Source |
 |---|---|---|---|
-| `audio/ar/duas-sleep.mp3` | Before sleeping | بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا | Sahih al-Bukhari 6324 |
-| `audio/ar/duas-wake.mp3` | On waking up | الْحَمْدُ لِلَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا وَإِلَيْهِ النُّشُورُ | Sahih al-Bukhari 6312 |
-| `audio/ar/duas-home.mp3` | Leaving home | بِسْمِ اللَّهِ، تَوَكَّلْتُ عَلَى اللَّهِ، وَلَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ | Abu Dawud 5095, Tirmidhi 3426 |
-| `audio/ar/duas-jazak.mp3` | Saying thank you | جَزَاكَ اللَّهُ خَيْرًا | Tirmidhi 2035 |
-| `audio/ar/duas-salam.mp3` | Meeting someone | السَّلَامُ عَلَيْكُمْ | Sunnah greeting |
+| `audio/ar/duas-sleep.mp3` | Before sleeping | اللَّهُمَّ بِاسْمِكَ أَمُوتُ وَأَحْيَا | Sahih al-Bukhari 6314 (https://sunnah.com/bukhari:6314) |
+| `audio/ar/duas-wake.mp3` | On waking up | الْحَمْدُ لِلَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا وَإِلَيْهِ النُّشُورُ | Sahih al-Bukhari 6314 (https://sunnah.com/bukhari:6314) |
+| `audio/ar/duas-home.mp3` | Leaving home | بِسْمِ اللَّهِ تَوَكَّلْتُ عَلَى اللَّهِ لاَ حَوْلَ وَلاَ قُوَّةَ إِلاَّ بِاللَّهِ | Sunan Abi Dawud 5095 (https://sunnah.com/abudawud:5095) |
+| `audio/ar/duas-jazak.mp3` | Saying thank you | جَزَاكَ اللَّهُ خَيْرًا | Jami at-Tirmidhi 2035 (https://sunnah.com/tirmidhi:2035) |
+| `audio/ar/duas-salam.mp3` | Meeting someone | السَّلاَمُ عَلَيْكُمْ | Sunan Abi Dawud 5195 (https://sunnah.com/abudawud:5195) |
 
 Optional: qari recordings of the 28 Arabic letter names, saved as `audio/ar/letter-0.mp3` … `letter-27.mp3` (alif … yaa, in the order of `LETTERS.ar`), would replace the current computer voice.
+
+All texts were checked word for word against the Arabic matn on sunnah.com on 1 Nov 2026.

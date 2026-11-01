@@ -60,7 +60,7 @@ window.PACKS = [
   {id:'baby',e:'👶',en:'Baby',ur:'بچہ',ar:'رَضِيع',es:'Bebé',fr:'Bébé',tr:'Bebek'},
   {id:'family',e:'👨‍👩‍👧‍👦',en:'Family',ur:'خاندان',ar:'عَائِلَة',es:'Familia',fr:'Famille',tr:'Aile'}]},
  {id:'greetings',title:'Greetings',icon:'👋',items:[
-  {id:'salam',e:'👋',en:'Peace be upon you',ur:'السلام علیکم',ar:'السَّلَامُ عَلَيْكُمْ',es:'Hola',fr:'Bonjour',tr:'Selam'},
+  {id:'salam',e:'👋',en:'Peace be upon you',ur:'السلام علیکم',ar:'السَّلاَمُ عَلَيْكُمْ',es:'Hola',fr:'Bonjour',tr:'Selam'},
   {id:'thanks',e:'🙏',en:'Thank you',ur:'شکریہ',ar:'شُكْرًا',es:'Gracias',fr:'Merci',tr:'Teşekkürler'},
   {id:'morning',e:'🌅',en:'Good morning',ur:'صبح بخیر',ar:'صَبَاحُ الْخَيْر',es:'Buenos días',fr:'Bonjour',tr:'Günaydın'},
   {id:'night',e:'🌙',en:'Good night',ur:'شب بخیر',ar:'تُصْبِحُ عَلَى خَيْر',es:'Buenas noches',fr:'Bonne nuit',tr:'İyi geceler'},
@@ -74,11 +74,11 @@ window.PACKS = [
   {id:'ilm',e:'📚',when:'Before studying',ar:'رَبِّ زِدْنِي عِلْمًا',en:'My Lord, increase me in knowledge',ur:'اے میرے رب! میرے علم میں اضافہ فرما',ref:'20:114',quran:true},
   {id:'sharh',e:'🌟',when:'Before a test or a hard task',ar:'رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي',en:'My Lord, open my heart for me and make my task easy for me',ur:'اے میرے رب! میرا سینہ کھول دے اور میرا کام آسان کر دے',ref:'20:25–26',quran:true},
   {id:'rabbana',e:'🤲',when:'Anytime',ar:'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ',en:'Our Lord, give us good in this world and good in the Hereafter, and protect us from the punishment of the Fire',ur:'اے ہمارے رب! ہمیں دنیا میں بھلائی دے اور آخرت میں بھلائی دے اور ہمیں آگ کے عذاب سے بچا',ref:'2:201',quran:true},
-  {id:'sleep',e:'🛏️',when:'Before sleeping',ar:'بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا',en:'In Your name, O Allah, I die and I live',ur:'اے اللہ! تیرے نام کے ساتھ میں مرتا اور جیتا ہوں',src:'Sahih al-Bukhari 6324'},
-  {id:'wake',e:'🌞',when:'On waking up',ar:'الْحَمْدُ لِلَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا وَإِلَيْهِ النُّشُورُ',en:'Praise be to Allah who gave us life after death, and to Him is the return',ur:'تمام تعریفیں اللہ کے لیے جس نے ہمیں مارنے کے بعد زندہ کیا اور اسی کی طرف لوٹنا ہے',src:'Sahih al-Bukhari 6312'},
-  {id:'home',e:'🚪',when:'Leaving home',ar:'بِسْمِ اللَّهِ، تَوَكَّلْتُ عَلَى اللَّهِ، وَلَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ',en:'In the name of Allah, I trust in Allah, and there is no might nor power except with Allah',ur:'اللہ کے نام سے، میں نے اللہ پر بھروسہ کیا، اور اللہ کے بغیر نہ کوئی طاقت ہے نہ قوت',src:'Sunan Abi Dawud 5095, Jami at-Tirmidhi 3426'},
-  {id:'jazak',e:'🎁',when:'Saying thank you',ar:'جَزَاكَ اللَّهُ خَيْرًا',en:'May Allah reward you with good',ur:'اللہ آپ کو بہترین بدلہ دے',src:'Jami at-Tirmidhi 2035'},
-  {id:'salam',e:'🤝',when:'Meeting someone',ar:'السَّلَامُ عَلَيْكُمْ',en:'Peace be upon you',ur:'آپ پر سلامتی ہو',src:'Sunnah greeting'}]}
+  {id:'sleep',e:'🛏️',when:'Before sleeping',ar:'اللَّهُمَّ بِاسْمِكَ أَمُوتُ وَأَحْيَا',en:'O Allah, in Your name I die and I live',ur:'اے اللہ! تیرے ہی نام کے ساتھ میں مرتا ہوں اور جیتا ہوں',src:'Sahih al-Bukhari 6314'},
+  {id:'wake',e:'🌞',when:'On waking up',ar:'الْحَمْدُ لِلَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا وَإِلَيْهِ النُّشُورُ',en:'All praise is for Allah, who gave us life after He made us die (sleep), and to Him is the rising (Resurrection)',ur:'تمام تعریفیں اللہ کے لیے ہیں جس نے ہمیں موت (نیند) کے بعد زندگی دی، اور اسی کی طرف (قیامت کے دن) اٹھ کر جانا ہے',src:'Sahih al-Bukhari 6314'},
+  {id:'home',e:'🚪',when:'Leaving home',ar:'بِسْمِ اللَّهِ تَوَكَّلْتُ عَلَى اللَّهِ لاَ حَوْلَ وَلاَ قُوَّةَ إِلاَّ بِاللَّهِ',en:'In the name of Allah, I place my trust in Allah; there is no might and no power except with Allah',ur:'اللہ کے نام سے، میں نے اللہ پر بھروسہ کیا، اللہ کی مدد کے بغیر نہ (برائی سے بچنے کی) طاقت ہے نہ (نیکی کرنے کی) قوت',src:'Sunan Abi Dawud 5095'},
+  {id:'jazak',e:'🎁',when:'Saying thank you',ar:'جَزَاكَ اللَّهُ خَيْرًا',en:'May Allah reward you with good',ur:'اللہ آپ کو بھلائی (اچھا بدلہ) عطا فرمائے',src:'Jami at-Tirmidhi 2035'},
+  {id:'salam',e:'🤝',when:'Meeting someone',ar:'السَّلاَمُ عَلَيْكُمْ',en:'Peace be upon you',ur:'آپ پر سلامتی ہو',src:'Sunan Abi Dawud 5195, Jami at-Tirmidhi 2689'}]}
 ];
 window.LETTERS = {
   en:'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),
