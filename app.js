@@ -74,7 +74,7 @@ function tabs(active){const T=[['translate','🌍','Translate'],['home','🗺️
  $('#tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>go(b.dataset.go))}
 
 const SCREENS={
-profiles(){app.innerHTML=`<div class="center">${MASCOT('bounce')}<h1>Multilingo</h1><p class="muted">Learning for Kids · English · اردو · العربية</p><h2>Who is learning today?</h2></div>
+profiles(){app.innerHTML=`<div class="center">${MASCOT('bounce')}<h1>Multilingua</h1><p class="muted">Translator for Kids · English · اردو · العربية</p><h2>Who is learning today?</h2></div>
  <div class="grid">${S.profiles.map((p,i)=>`<button class="tile c${i%7}" data-id="${p.id}"><span class="ic">${p.avatar}</span>${esc(p.name)}<small>${LANGS[p.lang].flag} ${LANGS[p.lang].name}</small></button>`).join('')}
  <button class="tile" id="add"><span class="ic">➕</span>Add child</button></div>
  <button class="big soft" id="par">👪 Parents</button>`;

@@ -1,4 +1,4 @@
-/* Multilingo content. Each item: id, e (emoji picture), en, ur, ar. Optional: es, fr, tr.
+/* Multilingua content. Each item: id, e (emoji picture), en, ur, ar. Optional: es, fr, tr.
    Recorded audio: put files at audio/<lang>/<pack>-<id>.mp3 and list the keys in RECORDED below
    (e.g. "ar/duas-bismillah"). Listed files play instead of device speech. */
 window.RECORDED = [];
