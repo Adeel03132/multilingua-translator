@@ -5,7 +5,7 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const AVATARS=['🦁','🐼','🐰','🦊','🐯','🐨','🐸','🦄','🐧','🐢'];
 let S=load();
-function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.profiles)return s}catch(e){}return{profiles:[],current:null,settings:{online:true,voiceOnly:true,voice:true,sfx:false,rate:0.8,limit:0}}}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.profiles)return s}catch(e){}return{profiles:[],current:null,settings:{online:true,voiceSrc:'auto',voiceOnly:true,voice:true,sfx:false,rate:0.8,limit:0}}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Could not save progress on this device.')}}
 const kid=()=>S.profiles.find(p=>p.id===S.current);
 function toast(msg,ms){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,ms||3500)}
@@ -18,14 +18,37 @@ let voices=[];const loadVoices=()=>{if('speechSynthesis' in window)voices=speech
 if('speechSynthesis' in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
 const findVoice=l=>voices.find(v=>v.lang.toLowerCase().replace('_','-').startsWith(l));
 let warned={};
-function say(text,lang,key){
-  if(!S.settings.voice)return;
-  if(key&&window.RECORDED.includes(lang+'/'+key)){const a=new Audio('audio/'+lang+'/'+key+'.mp3');a.play().catch(()=>{});return}
-  if(!('speechSynthesis' in window)){fallback(lang);return}
-  speechSynthesis.cancel();const v=findVoice(vcode(lang));
-  if(!v){fallback(lang);return}
-  const u=new SpeechSynthesisUtterance(text);u.lang=v.lang;u.voice=v;u.rate=S.settings.rate||0.8;speechSynthesis.speak(u);
-}
+let curA=null,sayId=0;const AUDIO_CACHE='multilingua-audio-1';
+const nrm=t=>String(t).toLowerCase().normalize('NFKC').replace(/[\u064B-\u0652\u0670\u0640]/g,'').replace(/[.,!?؟،"'“”:;]/g,' ').replace(/\s+/g,' ').trim();
+function recKey(text,lang){const n=nrm(text);for(const p of PACKS)for(const it of p.items)if(it[lang]&&nrm(it[lang])===n)return p.id+'-'+it.id;return null}
+function stopAll(){if(curA){curA.onended=curA.onerror=null;try{curA.pause()}catch(e){}curA=null}if('speechSynthesis' in window)speechSynthesis.cancel();vload(false)}
+function vload(on){let el=document.getElementById('vload');if(!el){el=document.createElement('div');el.id='vload';el.setAttribute('role','status');el.innerHTML='🔊 Loading voice…';document.body.appendChild(el)}el.hidden=!on}
+function playUrl(url,{loading}={}){return new Promise((ok,no)=>{const a=new Audio();curA=a;a.preload='auto';let started=false;
+  if(loading)vload(true);
+  const t=setTimeout(()=>{if(!started){a.onerror=null;a.pause();vload(false);no(new Error('timeout'))}},loading?9000:5000);
+  a.onplaying=()=>{started=true;clearTimeout(t);vload(false)};a.onended=()=>{clearTimeout(t);ok()};a.onerror=()=>{clearTimeout(t);vload(false);no(a.error||new Error('audio'))};
+  a.playbackRate=Math.max(.7,Math.min(1,(S.settings.rate||.8)+.15));a.src=url;a.play().catch(e=>{clearTimeout(t);vload(false);no(e)})})}
+function chunks(text,max){const out=[];let rest=text.replace(/\s+/g,' ').trim();
+  while(rest.length>max){let cut=-1;for(const re of[/[.!?؟।。]\s/g,/[,،;:]\s/g,/\s/g]){let m;re.lastIndex=0;while((m=re.exec(rest))&&m.index<max)cut=m.index+1;if(cut>0)break}
+   if(cut<=0)cut=max;out.push(rest.slice(0,cut).trim());rest=rest.slice(cut).trim()}if(rest)out.push(rest);return out}
+async function sayOnline(text,lang,id){const P=window.ONLINE_TTS;for(const c of chunks(text,P.max)){if(id!==sayId)return;await playUrl(P.url(c,lang),{loading:true})}}
+function sayDevice(text,lang){if(!('speechSynthesis' in window))return false;const v=findVoice(vcode(lang));if(!v)return false;
+  const u=new SpeechSynthesisUtterance(text);u.lang=v.lang;u.voice=v;u.rate=S.settings.rate||0.8;speechSynthesis.speak(u);return true}
+/* Order: recorded file > device voice > online voice > owl message. voiceSrc: auto | device | online (online preferred over device) */
+async function say(text,lang,key){
+  if(!S.settings.voice||!text)return;stopAll();const id=++sayId;
+  const mode=S.settings.voiceSrc||'auto';
+  key=key||recKey(text,lang);
+  if(key&&window.RECORDED.includes(lang+'/'+key)){try{await playUrl('audio/'+lang+'/'+key+'.mp3');return}catch(e){}}
+  const canOnline=mode!=='device'&&navigator.onLine&&window.ONLINE_TTS;
+  if(mode==='online'&&canOnline){try{await sayOnline(text,lang,id);return}catch(e){}}
+  if(sayDevice(text,lang))return;
+  if(mode==='auto'&&canOnline){try{await sayOnline(text,lang,id);return}catch(e){}}
+  fallback(lang)}
+function precacheLang(lang){try{if(!('caches' in window)||!navigator.onLine||(navigator.connection&&navigator.connection.saveData))return;
+  const flag='multilingua.audio.'+lang;if(localStorage.getItem(flag))return;
+  const urls=window.RECORDED.filter(k=>k.startsWith(lang+'/')).map(k=>'audio/'+k+'.mp3');
+  (window.requestIdleCallback||setTimeout)(()=>caches.open(AUDIO_CACHE).then(c=>c.addAll(urls)).then(()=>localStorage.setItem(flag,'1')).catch(()=>{}),3000)}catch(e){}}
 const vcode=l=>((LANGS[l]&&LANGS[l].voice)||l).toLowerCase().split('-')[0];
 const lname=l=>(LANGS[l]&&LANGS[l].name)||((window.TLANGS||[]).find(x=>x[0]===l)||[0,l])[1];
 function fallback(lang){if(warned[lang]&&Date.now()-warned[lang]<20000)return;warned[lang]=Date.now();
@@ -62,7 +85,7 @@ const overLimit=p=>S.settings.limit>0&&p.time&&p.time.d===today()&&p.time.s>=S.s
 
 /* ---------- Router ---------- */
 let cur='';
-function go(screen,arg){cur=screen;if('speechSynthesis' in window)speechSynthesis.cancel();const p=kid();
+function go(screen,arg){cur=screen;stopAll();const p=kid();
  if(!p&&!['profiles','newkid','gate','parent'].includes(screen)){screen='profiles';cur=screen}
  if(p&&overLimit(p)&&!['parent','gate','profiles','break','unlock','newkid'].includes(screen)){screen='break';cur=screen}
  const chrome=!!p&&!['lesson','profiles','newkid','gate','break'].includes(screen);
@@ -117,6 +140,7 @@ parent(){const st=S.settings;
  <label class="row">Gentle tap sounds<input type="checkbox" class="switch" id="fx" ${st.sfx?'checked':''} ${st.voiceOnly?'disabled':''}></label>
  <label class="row">Speaking speed<select id="rt">${[[.6,'Slow'],[.8,'Normal'],[1,'Fast']].map(([v,l])=>`<option value="${v}" ${st.rate==v?'selected':''}>${l}</option>`).join('')}</select></label>
  <button class="big soft" id="test">🔊 Test voices</button><p class="muted" id="vinfo"></p></div>
+ <div class="card"><h2>Voice</h2><label class="row">Voice source<select id="vsrc"><option value="auto" ${(st.voiceSrc||'auto')==='auto'?'selected':''}>Auto</option><option value="device" ${st.voiceSrc==='device'?'selected':''}>Device only</option><option value="online" ${st.voiceSrc==='online'?'selected':''}>Online allowed</option></select></label><p class="muted">Lesson words, duas and letters always use the built-in recordings. For other text — Auto: phone voice, then online voice if the phone has none. Device only: never sends text to a voice service. Online allowed: online voice first (sends the text to ${esc(window.ONLINE_TTS.name)}).</p></div>
  <div class="card"><h2>Translator</h2><label class="row">Online translation (off = built-in kid dictionary only)<input type="checkbox" class="switch" id="onl" ${st.online!==false?'checked':''}></label><p class="muted">Rude words are always blocked in both directions. Typed text is sent to MyMemory (or Lingva as backup) only when online translation is on.</p></div>
  <div class="card"><h2>Screen time</h2><label class="row">Daily limit per child<select id="lim">${[0,10,15,20,30,45,60].map(v=>`<option value="${v}" ${st.limit==v?'selected':''}>${v?v+' minutes':'No limit'}</option>`).join('')}</select></label></div>
  <div class="card"><h2>Children</h2>${S.profiles.map(p=>`<div class="row"><span>${p.avatar} ${esc(p.name)}</span><span><select data-lang="${p.id}" aria-label="Language for ${esc(p.name)}">${Object.keys(LANGS).map(l=>`<option value="${l}" ${p.lang===l?'selected':''}>${LANGS[l].name}</option>`).join('')}</select> <button class="back" data-del="${p.id}" aria-label="Remove ${esc(p.name)}">🗑️</button></span></div>`).join('')}</div>
@@ -124,7 +148,7 @@ parent(){const st=S.settings;
  $('#bk').onclick=()=>go(kid()?'translate':'profiles');$('#addk').onclick=()=>go('newkid');
  const set=(k,v)=>{st[k]=v;save()};
  $('#vo').onchange=e=>{set('voiceOnly',e.target.checked);$('#fx').disabled=e.target.checked};$('#vc').onchange=e=>set('voice',e.target.checked);$('#fx').onchange=e=>set('sfx',e.target.checked);
- $('#onl').onchange=e=>set('online',e.target.checked);$('#rt').onchange=e=>set('rate',+e.target.value);$('#lim').onchange=e=>set('limit',+e.target.value);
+ $('#vsrc').onchange=e=>set('voiceSrc',e.target.value);$('#onl').onchange=e=>set('online',e.target.checked);$('#rt').onchange=e=>set('rate',+e.target.value);$('#lim').onchange=e=>set('limit',+e.target.value);
  $('#test').onclick=()=>{loadVoices();$('#vinfo').textContent=Object.keys(LANGS).map(l=>LANGS[l].name+': '+(findVoice(LANGS[l].voice)?'✅':'❌ not installed')).join(' · ');say('Hello','en')};
  app.querySelectorAll('[data-lang]').forEach(s=>s.onchange=()=>{S.profiles.find(p=>p.id===s.dataset.lang).lang=s.value;save()});
  app.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{if(confirm('Remove this child and their progress?')){S.profiles=S.profiles.filter(p=>p.id!==b.dataset.del);if(S.current===b.dataset.del)S.current=null;save();go('parent')}})},
@@ -175,7 +199,7 @@ function traceScreen(letter){const p=kid();traceLang=traceLang||(LETTERS[p.lang]
  app.innerHTML=`<button class="back" id="bk">← Letters</button><div class="center"><span class="word" lang="${tl}">${esc(letter)}</span> <button class="speak" id="sp" aria-label="Hear letter">🔊</button></div>
  <div class="trace-wrap"><canvas id="g" aria-hidden="true"></canvas><canvas id="d" role="img" aria-label="Trace the letter ${esc(letter)} with your finger"></canvas></div>
  <div class="grid" style="grid-template-columns:1fr 1fr"><button class="big soft" id="cl">🧽 Clear</button><button class="big green" id="ck">✅ Done</button></div>`;
- $('#bk').onclick=()=>traceScreen();$('#sp').onclick=()=>say(letter,tl);say(letter,tl);
+ $('#bk').onclick=()=>traceScreen();const lk='letter-'+LETTERS[tl].indexOf(letter);$('#sp').onclick=()=>say(letter,tl,lk);say(letter,tl,lk);
  const g=$('#g'),d=$('#d'),wrap=app.querySelector('.trace-wrap'),dpr=Math.min(2,window.devicePixelRatio||1);let W;
  function setup(){W=wrap.clientWidth;[g,d].forEach(c=>{c.width=c.height=W*dpr;c.getContext('2d').setTransform(dpr,0,0,dpr,0,0)});drawGuide(g.getContext('2d'),'#e8e1ff');
   const x=d.getContext('2d');x.lineCap=x.lineJoin='round';x.lineWidth=W*0.07;x.strokeStyle='#7b5cff'}
@@ -193,5 +217,5 @@ function traceScreen(letter){const p=kid();traceLang=traceLang||(LETTERS[p.lang]
 
 /* ---------- Boot ---------- */
 if('serviceWorker' in navigator&&location.protocol!=='file:')window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
-window.ML={S,save,kid,esc,say,toast,go,bumpStreak,checkBadges,confetti,SCREENS,bar:()=>bar()};
+window.ML={precacheLang,S,save,kid,esc,say,toast,go,bumpStreak,checkBadges,confetti,SCREENS,bar:()=>bar()};
 })();

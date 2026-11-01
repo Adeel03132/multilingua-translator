@@ -11,12 +11,13 @@ function isBad(text){const t=norm(text),tokens=t.split(/[^\p{L}\p{N}]+/u).filter
  if(tokens.some(w=>LAT.has(w)))return true;if(PHR.some(p=>pad.includes(' '+p+' ')))return true;if(SCR.some(w=>(' '+t+' ').includes(' '+w)||t.includes(w)&&w.length>3))return true;return false}
 const BLOCK_MSG='🦉 Oops! That word isn\'t kind, so Lingo won\'t translate it. Let\'s try a happy word like "friend" 💜';
 /* Online translation */
+const LINGVA=['https://lingva.lunar.icu','https://translate.plausibility.cloud','https://lingva.ml'];
 const lingvaCode=c=>c==='zh-CN'?'zh':c==='fil'?'tl':c;
 async function withTimeout(url,ms){const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),ms);try{const r=await fetch(url,{signal:ctl.signal,referrerPolicy:'no-referrer',credentials:'omit'});if(!r.ok)throw new Error('http '+r.status);return await r.json()}finally{clearTimeout(t)}}
 async function online(q,from,to){
  try{const d=await withTimeout('https://api.mymemory.translated.net/get?q='+encodeURIComponent(q)+'&langpair='+encodeURIComponent(from+'|'+to),8000);
   const t=d&&d.responseData&&d.responseData.translatedText;if(t&&Number(d.responseStatus)===200&&!/MYMEMORY WARNING|INVALID LANGUAGE|QUERY LENGTH/i.test(t))return{text:decode(t),src:'MyMemory'}}catch(e){}
- try{const d=await withTimeout('https://lingva.ml/api/v1/'+lingvaCode(from)+'/'+lingvaCode(to)+'/'+encodeURIComponent(q),8000);if(d&&d.translation)return{text:d.translation,src:'Lingva'}}catch(e){}
+ for(const h of LINGVA){try{const d=await withTimeout(h+'/api/v1/'+lingvaCode(from)+'/'+lingvaCode(to)+'/'+encodeURIComponent(q),7000);if(d&&d.translation)return{text:d.translation,src:'Lingva'}}catch(e){}}
  return null}
 function decode(t){const a=document.createElement('textarea');a.innerHTML=t;return a.value}
 /* Voice input */
@@ -27,7 +28,7 @@ const dirOf=c=>TL[c]?TL[c].dir:'ltr';
 let last=null;
 SCREENS.translate=function(){const p=kid();p.saved=p.saved||[];p.history=p.history||[];p.words=p.words||{};
  if(!p.tfrom){p.tfrom='en';p.tto=p.lang!=='en'&&TL[p.lang]?p.lang:'ur'}
- const app=$('#app');last=null;
+ const app=$('#app');last=null;window.ML.precacheLang(p.lang);
  app.innerHTML=`<div class="tr-hero"><svg class="mascot" viewBox="0 0 200 200" aria-hidden="true"><ellipse cx="100" cy="118" rx="70" ry="74" fill="#ffb84d"/><ellipse cx="100" cy="132" rx="44" ry="50" fill="#ffe2a8"/><circle cx="72" cy="88" r="27" fill="#fff"/><circle cx="128" cy="88" r="27" fill="#fff"/><circle cx="76" cy="91" r="12" fill="#2b2250"/><circle cx="124" cy="91" r="12" fill="#2b2250"/><path d="M90 112h20l-10 14z" fill="#ff7a59"/><path d="M40 60l18-30 16 36zM160 60l-18-30-16 36z" fill="#ffb84d"/></svg><h1>Kids Translator</h1></div>
  <div class="card tr">
   <div class="langrow"><label><span>From</span><select id="from" class="lsel">${opts(p.tfrom)}</select></label><button id="swap" class="swapbtn" aria-label="Swap languages">⇄</button><label><span>To</span><select id="to" class="lsel">${opts(p.tto)}</select></label></div>
@@ -96,4 +97,5 @@ SCREENS.translate=function(){const p=kid();p.saved=p.saved||[];p.history=p.histo
  lists()};
 window.ML.translatorTest={isBad,lookup};
 go(kid()?'translate':'profiles');
+if(kid())window.ML.precacheLang(kid().lang);
 })();
