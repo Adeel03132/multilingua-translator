@@ -72,3 +72,5 @@ table{width:100%;border-collapse:collapse;font-size:16px}th,td{padding:8px 6px;b
 .ti-btns{display:flex;gap:6px}.ib{width:48px;height:48px;border-radius:14px;background:#fff;font-size:22px;box-shadow:0 3px 0 #e2dbff}
 .tabs button{font-size:12px;padding:6px 2px}
 #vload{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:8px 16px;border-radius:999px;font-weight:800;font-size:15px;z-index:60;animation:bob 1s infinite}
+.dua-ref{font-size:14px;color:var(--muted);margin:6px 0 0;text-align:center}
+.rec-soon{background:#fff4d6;border-radius:14px;padding:8px 12px;font-weight:700;font-size:15px;text-align:center;margin:8px 0 0}

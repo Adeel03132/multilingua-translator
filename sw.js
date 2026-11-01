@@ -1,6 +1,6 @@
-const V='multilingua-v5',SHELL=['./','index.html','style.css','app.js','data.js','translator.js','manifest.json','icons/icon.svg','icons/icon-192.png','icons/icon-512.png'];
+const V='multilingua-v6',SHELL=['./','index.html','style.css','app.js','data.js','translator.js','manifest.json','icons/icon.svg','icons/icon-192.png','icons/icon-512.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()))});
-const A='multilingua-audio-1';
+const A='multilingua-audio-2';
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==V&&x!==A).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 self.addEventListener('fetch',e=>{const r=e.request;if(r.method!=='GET')return;const u=new URL(r.url);
  if(u.origin===location.origin&&u.pathname.includes('/audio/')){e.respondWith(caches.open(A).then(c=>c.match(r,{ignoreSearch:true}).then(m=>m||fetch(u.href).then(res=>{if(res.ok&&res.status===200)c.put(u.href,res.clone());return res}))));return}

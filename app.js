@@ -18,7 +18,7 @@ let voices=[];const loadVoices=()=>{if('speechSynthesis' in window)voices=speech
 if('speechSynthesis' in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
 const findVoice=l=>voices.find(v=>v.lang.toLowerCase().replace('_','-').startsWith(l));
 let warned={};
-let curA=null,sayId=0;const AUDIO_CACHE='multilingua-audio-1';
+let curA=null,sayId=0;const AUDIO_CACHE='multilingua-audio-2';
 const nrm=t=>String(t).toLowerCase().normalize('NFKC').replace(/[\u064B-\u0652\u0670\u0640]/g,'').replace(/[.,!?؟،"'“”:;]/g,' ').replace(/\s+/g,' ').trim();
 function recKey(text,lang){const n=nrm(text);for(const p of PACKS)for(const it of p.items)if(it[lang]&&nrm(it[lang])===n)return p.id+'-'+it.id;return null}
 function stopAll(){if(curA){curA.onended=curA.onerror=null;try{curA.pause()}catch(e){}curA=null}if('speechSynthesis' in window)speechSynthesis.cancel();vload(false)}
@@ -35,18 +35,27 @@ async function sayOnline(text,lang,id){const P=window.ONLINE_TTS;for(const c of 
 function sayDevice(text,lang){if(!('speechSynthesis' in window))return false;const v=findVoice(vcode(lang));if(!v)return false;
   const u=new SpeechSynthesisUtterance(text);u.lang=v.lang;u.voice=v;u.rate=S.settings.rate||0.8;speechSynthesis.speak(u);return true}
 /* Order: recorded file > device voice > online voice > owl message. voiceSrc: auto | device | online (online preferred over device) */
+/* ---------- Quran / dua protection: never computer-voiced ---------- */
+const qn=t=>String(t).normalize('NFKC').replace(/\ufeff/g,'').replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g,'').replace(/[ٱأإآ]/g,'ا').replace(/ى/g,'ي').replace(/[ۀة]/g,'ه').replace(/[ہھ]/g,'ه').replace(/[یے]/g,'ي').replace(/ک/g,'ك').replace(/[^\u0621-\u064A\s]/g,' ').replace(/\s+/g,' ').trim();
+let QSET=null,DUAQ=null;
+function qIndex(){if(QSET)return;QSET=new Set();(window.QURAN_DETECT||[]).forEach(a=>{const w=qn(a).split(' ');for(let i=0;i+2<w.length;i++)QSET.add(w[i]+' '+w[i+1]+' '+w[i+2])});
+  DUAQ=(PACKS.find(p=>p.dua)||{items:[]}).items.map(it=>qn(it.ar)).filter(x=>x.length>2)}
+function isQuranic(text){if(!/[\u0600-\u06FF]/.test(text||''))return false;qIndex();const n=qn(text);if(!n)return false;const pad=' '+n+' ';
+  if(DUAQ.some(d=>pad.includes(' '+d+' ')))return true;const w=n.split(' ');for(let i=0;i+2<w.length;i++)if(QSET.has(w[i]+' '+w[i+1]+' '+w[i+2]))return true;return false}
+let qwarn=0;function qariNote(){if(Date.now()-qwarn<15000)return;qwarn=Date.now();toast('📖 Duas and Qur\'an should be heard from a qari. Please read it with a grown-up or teacher 💛',5000)}
 async function say(text,lang,key){
   if(!S.settings.voice||!text)return;stopAll();const id=++sayId;
   const mode=S.settings.voiceSrc||'auto';
   key=key||recKey(text,lang);
   if(key&&window.RECORDED.includes(lang+'/'+key)){try{await playUrl('audio/'+lang+'/'+key+'.mp3');return}catch(e){}}
+  if((key&&key.startsWith('duas-')&&lang==='ar')||isQuranic(text)){qariNote();return}
   const canOnline=mode!=='device'&&navigator.onLine&&window.ONLINE_TTS;
   if(mode==='online'&&canOnline){try{await sayOnline(text,lang,id);return}catch(e){}}
   if(sayDevice(text,lang))return;
   if(mode==='auto'&&canOnline){try{await sayOnline(text,lang,id);return}catch(e){}}
   fallback(lang)}
 function precacheLang(lang){try{if(!('caches' in window)||!navigator.onLine||(navigator.connection&&navigator.connection.saveData))return;
-  const flag='multilingua.audio.'+lang;if(localStorage.getItem(flag))return;
+  const flag='multilingua.audio2.'+lang;if(localStorage.getItem(flag))return;
   const urls=window.RECORDED.filter(k=>k.startsWith(lang+'/')).map(k=>'audio/'+k+'.mp3');
   (window.requestIdleCallback||setTimeout)(()=>caches.open(AUDIO_CACHE).then(c=>c.addAll(urls)).then(()=>localStorage.setItem(flag,'1')).catch(()=>{}),3000)}catch(e){}}
 const vcode=l=>((LANGS[l]&&LANGS[l].voice)||l).toLowerCase().split('-')[0];
@@ -162,16 +171,17 @@ function lesson(pk,idx){const p=kid(),l=p.lang,dua=!!pk.dua,sl=dua?'ar':l;
  const L=lessonsOf(pk);const items=L[idx]||shuffle(pk.items).slice(0,4);
  const steps=[];if(L[idx])items.forEach(it=>steps.push({t:'learn',it}));shuffle(items).forEach(it=>steps.push({t:'quiz',it}));steps.push({t:'match'});
  let k=0,miss=0;cur='lesson';
- const key=it=>pk.id+'-'+it.id,speak=it=>say(word(it,sl),sl,key(it));
+ const key=it=>pk.id+'-'+it.id,hasRec=it=>window.RECORDED.includes(sl+'/'+key(it)),speak=it=>{if(dua&&!hasRec(it))return;say(word(it,sl),sl,key(it))};
+ const duaInfo=it=>(it.quran?`<p class="dua-ref">📖 Qur'an ${esc(it.ref)}${hasRec(it)?' · recited by Mishary Rashid Alafasy (Hafs ʿan ʿAsim)':''}</p>`:`<p class="dua-ref">📜 ${esc(it.src||'Sunnah')}</p>`)+(hasRec(it)?'':'<p class="rec-soon">🎙️ Recording coming soon – please read with a grown-up/teacher</p>');
  function head(){return `<div class="lessonbar"><button class="back" id="x" aria-label="Close lesson">✖</button><div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${steps.length}" aria-valuenow="${k}"><i style="width:${k/steps.length*100}%"></i></div></div>`}
  function bind(){$('#x').onclick=()=>go('pack',pk.id)}
  function meaning(it){return dua&&l!=='ar'?`<div class="sub" lang="${l}" dir="${LANGS[l].dir}">${esc(word(it,l==='ur'?'ur':l==='en'?'en':'en'))}</div>`:''}
  function step(){if(k>=steps.length)return done();const s=steps[k];
-  if(s.t==='learn'){app.innerHTML=head()+`<div class="card learn">${dua?`<span class="dua-when">${esc(s.it.when)}</span>`:''}<div class="pic" aria-hidden="true">${s.it.e}</div>${wordHTML(s.it,sl)}${meaning(s.it)}<button class="speak" id="sp" aria-label="Listen">🔊</button></div><button class="big" id="nx">Next ➜</button>`;
-   bind();$('#sp').onclick=()=>speak(s.it);$('#nx').onclick=()=>{k++;step()};speak(s.it)}
+  if(s.t==='learn'){app.innerHTML=head()+`<div class="card learn">${dua?`<span class="dua-when">${esc(s.it.when)}</span>`:''}<div class="pic" aria-hidden="true">${s.it.e}</div>${wordHTML(s.it,sl)}${meaning(s.it)}${dua?duaInfo(s.it):''}${!dua||hasRec(s.it)?'<button class="speak" id="sp" aria-label="Listen">🔊</button>':''}</div><button class="big" id="nx">Next ➜</button>`;
+   bind();if($('#sp'))$('#sp').onclick=()=>speak(s.it);$('#nx').onclick=()=>{k++;step()};speak(s.it)}
   else if(s.t==='quiz'){const others=shuffle(pk.items.filter(x=>x.id!==s.it.id)).slice(0,3),opts=shuffle([s.it,...others]);let wrong=false;
-   app.innerHTML=head()+`<div class="card learn"><p class="sub">Tap the right picture!</p><button class="speak" id="sp" aria-label="Listen again">🔊</button>${wordHTML(s.it,sl)}</div><div class="choices">${opts.map(o=>`<button class="choice" data-id="${o.id}" aria-label="${esc(o.en)}">${o.e}</button>`).join('')}</div>`;
-   bind();$('#sp').onclick=()=>speak(s.it);speak(s.it);
+   app.innerHTML=head()+`<div class="card learn"><p class="sub">Tap the right picture!</p>${!dua||hasRec(s.it)?'<button class="speak" id="sp" aria-label="Listen again">🔊</button>':''}${wordHTML(s.it,sl)}</div><div class="choices">${opts.map(o=>`<button class="choice" data-id="${o.id}" aria-label="${esc(o.en)}">${o.e}</button>`).join('')}</div>`;
+   bind();if($('#sp'))$('#sp').onclick=()=>speak(s.it);speak(s.it);
    app.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{if(b.dataset.id===s.it.id){b.classList.add('right');sfx(true);app.querySelectorAll('.choice').forEach(x=>x.disabled=true);setTimeout(()=>{k++;step()},700)}else{b.classList.add('wrong');sfx(false);if(!wrong){miss++;wrong=true}setTimeout(()=>b.classList.remove('wrong'),400)}})}
   else{const set=items.slice(0,4),ws=shuffle(set),ps=shuffle(set);let sel=null,left=set.length,wrong={};
    app.innerHTML=head()+`<h2 class="center">Match the pairs!</h2><div class="match"><div class="col">${ws.map(o=>`<button class="mbtn" data-w="${o.id}" lang="${sl}" dir="${LANGS[sl].dir}">${esc(word(o,sl))}</button>`).join('')}</div><div class="col">${ps.map(o=>`<button class="mbtn pic" data-p="${o.id}" aria-label="${esc(o.en)}">${o.e}</button>`).join('')}</div></div>`;
@@ -217,5 +227,5 @@ function traceScreen(letter){const p=kid();traceLang=traceLang||(LETTERS[p.lang]
 
 /* ---------- Boot ---------- */
 if('serviceWorker' in navigator&&location.protocol!=='file:')window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
-window.ML={precacheLang,S,save,kid,esc,say,toast,go,bumpStreak,checkBadges,confetti,SCREENS,bar:()=>bar()};
+window.ML={isQuranic,precacheLang,S,save,kid,esc,say,toast,go,bumpStreak,checkBadges,confetti,SCREENS,bar:()=>bar()};
 })();
