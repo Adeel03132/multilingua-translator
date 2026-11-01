@@ -28,3 +28,5 @@ Still with NO audio and no computer voice: sleep, salam. See `RECORDINGS-NEEDED.
 ## Arabic letter names
 These are still computer TTS (edge-tts), because no openly licensed qari letter recordings were available as files.
 Option: Qamar Apps' "Al Qaida Al Nooraniya" (recited by Mufti Mohammed Ghiyas Mohiuddin) is published under CC BY-SA 4.0. Its audio is only inside their app, so you would have to ask Qamar Apps (support@qamarapps.com) for the files. CC BY-SA requires attribution and sharing under the same licence.
+
+Noise clean-up (1 Nov 2026): duas-home and duas-wake had background hiss removed (ffmpeg highpass 70 Hz, afftdn, gentle gate) and their volume levelled. duas-jazak had only its volume levelled. The words were re-checked by speech recognition after cleaning.
